@@ -498,7 +498,7 @@
             if (parts.length === 3 && parts[0] === "save-glyph" && parts[1] === window.name) {
                 const item = $(".glyph-item[data-uuid=" + parts[2] + "]");
                 if (item.length) {
-                    item.find(".glyph-input").val(e.newValue).change();
+                    item.find(".glyph-input").val(JSON.parse(e.newValue)).change();
                     setTimeout(() => {
                         localStorage.removeItem(e.key);
                     }, 1);
