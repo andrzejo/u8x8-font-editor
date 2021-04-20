@@ -425,14 +425,14 @@
                 }
                 const tiles = [];
                 const tile = [];
-                icon.forEach(n => {
+                icon.forEach((n, idx) => {
                     const value = parseInt(n, 8);
                     let bits = value.toString(2);
                     if (bits.length < 8) {
                         bits = new Array(8 - bits.length).fill('0').join('') + bits;
                     }
                     tile.push(bits.split('').reverse().map((b) => b === "1"));
-                    if (tile.length === 8) {
+                    if (tile.length === 8 || idx === icon.length - 1) {
                         tiles.push(Array.from(tile));
                         tile.length = 0;
                     }
