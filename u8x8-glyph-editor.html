@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>u8x8 icon editor</title>
+    <link href="icon.png" rel="shortcut icon" id="shortcut_icon">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+            crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
+            integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/highlight.min.js"
+            integrity="sha512-s+tOYYcC3Jybgr9mVsdAxsRYlGNq4mlAurOrfNuGMQ/SCofNPu92tjE7YRZCsdEtWL1yGkqk15fU/ark206YTg=="
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/languages/arduino.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/github.min.css"
+          integrity="sha512-7QTQ5Qsc/IL1k8UU2bkNFjpKTfwnvGuPYE6fzm6yeneWTEGiA3zspgjcTsSgln9m0cn3MgyE7EnDNkF1bB/uCw=="
+          crossorigin="anonymous"/>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+          integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+</head>
+<style>
+    html, body {
+        height: 100%;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    table {
+        border: 0;
+    }
+
+    td {
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        min-height: 20px;
+        border: 1px solid gray;
+        cursor: none;
+    }
+
+    td[data-selected="true"] {
+        background-color: cornflowerblue;
+    }
+
+    textarea#code {
+        font-family: monospace;
+        color: #d14;
+    }
+
+    .glyph-preview {
+        padding: 5px;
+        background-color: black;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-items: center;
+        justify-content: center;
+        margin: 0 20px;
+        box-shadow: 2px 2px 5px 2px #00000077;
+    }
+
+    #preview {
+        margin: 0;
+        padding: 0;
+    }
+
+    fieldset {
+        margin: 20px;
+    }
+
+    fieldset legend {
+        padding-left: 0;
+        font-weight: 300;
+        font-size: 15px;
+    }
+
+    legend {
+        display: block;
+        width: 100%;
+        padding: 0;
+        margin-bottom: 20px;
+        font-size: 21px;
+        line-height: inherit;
+        color: #333;
+        border: 0;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    .move .fa {
+        font-size: 32px;
+        cursor: pointer;
+    }
+
+    .cursor-container {
+        margin: 10px;
+        display: flex;
+    }
+
+    .cursor-buttons {
+        display: flex;
+        font-weight: 300;
+        align-items: center;
+    }
+
+    .cursor-buttons .active {
+        font-weight: bold;
+    }
+
+    .cursor {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        min-height: 20px;
+        margin: 0;
+        padding: 0;
+        display: none;
+        cursor: none;
+        border: 1px solid white;
+    }
+
+    .cursor[data-mode=draw] {
+        background-color: #0014ffa8;
+    }
+
+    .cursor[data-mode=erase] {
+        background-color: #00000047;
+    }
+
+    .cursor[data-mode=revert] {
+        background-color: #035af794;
+    }
+
+    .pencil-options {
+        display: flex;
+        flex-direction: column;
+        margin-left: 20px;
+        font-size: 14px;
+    }
+
+    .pencil-options .fa {
+        cursor: pointer;
+        border: 1px solid gray;
+        margin-bottom: 1px;
+        padding: 2px;
+        border-radius: 3px;
+    }
+
+    .pencil-options .fa.active {
+        color: cornflowerblue;
+    }
+
+    .not-selectable {
+        user-select: none;
+    }
+
+    .not-selectable * {
+        user-select: none;
+    }
+
+    .not-selectable,
+    .not-selectable *,
+    .not-selectable *::after,
+    .not-selectable *::before {
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-user-drag: none;
+        -webkit-app-region: no-drag;
+    }
+
+    .undo {
+        cursor: pointer;
+        font-size: 21px;
+        visibility: hidden;
+    }
+
+    .undo:not([data-length="0"]) {
+        visibility: visible;
+    }
+
+    .editor-buttons input {
+        margin: 20px 20px 0;
+    }
+</style>
+<body>
+<script>
+    /*
+    One tile has exactly 8 bytes (8x8 pixel monochrome bitmap).
+    The lowest bit of the first byte is the upper left corner
+    The highest bit of the first byte is the lower left corner
+    The lowest bit of the last byte is the upper right corner
+    The highest bit of the last byte is the lower left corner
+    "tile_ptr" is the address of a memory area, which contains
+    one or more tiles. "cnt" will contain the exact number of
+    tiles in the memory areay. The size of the memory area is 8*cnt;
+    Multiple tiles in the memory area form a horizontal sequence, this
+    means the first tile is drawn at x_pos/y_pos, the second tile is drawn
+    at x_pos+1/y_pos, third at x_pos+2/y_pos.
+    */
+
+    function Timings() {
+        const self = this;
+        self.timers = [];
+        self.timestamp = null;
+        self.label = null;
+
+        self.start = (label) => {
+            self.timestamp = new Date().getTime();
+            self.label = label;
+        }
+
+        self.stop = () => {
+            self.timers.push([self.label, new Date().getTime() - self.timestamp]);
+        }
+
+        self.printTimings = () => {
+            self.timers.forEach((i) => {
+                console.debug(`${i[0]} took ${i[1]} ms`);
+            });
+            self.timers = [];
+        }
+    }
+
+    $(() => {
+            let cursorX = 1;
+            let cursorY = 1;
+
+            let fontX = 2;
+            let fontY = 2;
+
+            let fontSizeX = 16;
+            let fontSizeY = 16;
+
+            const cellSize = 20;
+
+            let ctx = null;
+            let previewElement = $("#preview");
+
+            let displayMatrix = [];
+            let domElementsMatrix = [];
+            let undoElements = [];
+            let undoStartIdx = null;
+
+            let glyphParam = {};
+
+            let drawMode = "draw";
+
+            let mousePressed = false;
+
+            const cursor = $(".cursor");
+            const matrixElement = $("#matrix");
+
+            try {
+                /** @type OffscreenCanvasRenderingContext2D */
+                ctx = previewElement.get(0).getContext('2d');
+                ctx.canvas.width = fontSizeX;
+                ctx.canvas.height = fontSizeY;
+            } catch (e) {
+                console.error("Failed to draw preview", e);
+            }
+
+            const setFontSize = (x, y) => {
+                fontX = parseInt(x) || 2;
+                fontY = parseInt(y) || 2;
+                fontSizeX = fontX * 8;
+                fontSizeY = fontY * 8;
+
+                displayMatrix = createMatrix();
+                domElementsMatrix = createMatrix();
+
+                if (ctx) {
+                    ctx.canvas.width = fontSizeX;
+                    ctx.canvas.height = fontSizeY;
+                }
+
+                $(".glyph-preview").width(fontSizeX + 20).height(fontSizeY + 20);
+                previewElement.width(fontSizeX);
+                previewElement.height(fontSizeY);
+                drawTable();
+            };
+
+
+            const setCursor = (dim, val) => {
+                if (dim === 'x') {
+                    cursorX = val;
+                }
+
+                if (dim === 'y') {
+                    cursorY = val;
+                }
+
+                $(".cursor").css({width: cursorX * cellSize, height: cursorY * cellSize});
+            }
+
+            const tileCoordinates = (tileIdx) => {
+                const tiles = fontX * fontY;
+                const dim = Math.sqrt(tiles);
+                const x = tileIdx % dim;
+                const y = Math.floor(tileIdx / dim);
+                return {x, y}
+            }
+
+            const select = (x, y, value) => {
+                displayMatrix[x][y] = value;
+                domElementsMatrix[x][y].attr("data-selected", value ? "true" : "false");
+                if (ctx) {
+                    ctx.fillStyle = value ? '#fff' : '#000';
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+
+            const getTile = (tx, ty) => {
+                const tile = [];
+                for (let x = (tx * 8); x < (tx * 8) + 8; x++) {
+                    const bits = [];
+                    for (let y = (ty * 8); y < (ty * 8) + 8; y++) {
+                        const selected = displayMatrix[x][y];
+                        bits.push(selected ? "1" : "0");
+                    }
+                    const number = bits.reverse().join('');
+                    const value = parseInt(number, 2);
+                    tile.push(value.toString(8));
+                }
+                return tile;
+            }
+
+            const calcIcon = () => {
+                const tiles = [];
+
+                for (let t = 0; t < fontX * fontY; t++) {
+                    const coordinates = tileCoordinates(t)
+                    tiles.push(getTile(coordinates.x, coordinates.y));
+                }
+
+                let result = "";
+                for (let t = 0; t < tiles.length; t++) {
+                    const tile = tiles[t];
+                    for (let i = 0; i < tile.length; i++) {
+                        result += "\\" + tile[i];
+                    }
+                }
+                localStorage.setItem('icon', result);
+                $("#code").val(result);
+            }
+
+            const toggleElement = () => {
+                const offset = matrixElement.position();
+                const position = cursor.position();
+                const xPos = position.left - offset.left;
+                const yPos = position.top - offset.top;
+                const x = Math.floor(xPos / cellSize);
+                const y = Math.floor(yPos / cellSize);
+                const undoElement = [];
+
+                for (let i = x; i < x + cursorX; i++) {
+                    for (let j = y; j < y + cursorY; j++) {
+                        let currentValue = displayMatrix[i][j];
+                        const fill = drawMode === "draw" || (drawMode === "revert" && !currentValue);
+                        undoElement.push({x: i, y: j, value: currentValue})
+                        select(i, j, fill);
+                    }
+                }
+
+                if (undoElements.length > 0) {
+                    const last = undoElements[undoElements.length - 1];
+                    if (JSON.stringify(last) !== JSON.stringify(undoElement)) {
+                        undoElements.push(undoElement);
+                    }
+                } else {
+                    undoElements.push(undoElement);
+                }
+                updateUndo();
+                calcIcon();
+            }
+
+            const drawTable = () => {
+                const table = $("<table>");
+                for (let i = 0; i < fontSizeY; i++) {
+                    let tr = $("<tr>");
+                    tr.attr({"data-row": i});
+                    table.append(tr)
+                    for (let j = 0; j < fontSizeX; j++) {
+                        let td = $("<td>");
+                        td.attr({"data-column": j, "data-row": i});
+                        domElementsMatrix[j][i] = td;
+                        tr.append(td);
+                    }
+                }
+                $('#matrix').html("").append(table);
+            }
+
+            const drawTile = (tile, tx, ty) => {
+                for (let t = 0; t < 8; t++) {
+                    const bits = tile[t];
+                    for (let b = 0; b < 8; b++) {
+                        const bit = bits[b];
+                        if (bit) {
+                            const x = t + (tx * 8);
+                            const y = b + (ty * 8);
+                            select(x, y, true);
+                        }
+                    }
+                }
+            }
+
+            const displayIcon = (icon) => {
+                if (ctx) {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, fontSizeX, fontSizeY);
+                }
+                const tiles = [];
+                const tile = [];
+                icon.forEach(n => {
+                    const value = parseInt(n, 8);
+                    let bits = value.toString(2);
+                    if (bits.length < 8) {
+                        bits = new Array(8 - bits.length).fill('0').join('') + bits;
+                    }
+                    tile.push(bits.split('').reverse().map((b) => b === "1"));
+                    if (tile.length === 8) {
+                        tiles.push(Array.from(tile));
+                        tile.length = 0;
+                    }
+                })
+
+                for (let i = 0; i < tiles.length; i++) {
+                    const coordinates = tileCoordinates(i)
+                    drawTile(tiles[i], coordinates.x, coordinates.y);
+                }
+            }
+
+            const createMatrix = () => {
+                const matrix = new Array(fontSizeY).fill(false);
+                for (let x = 0; x < fontSizeY; x++) {
+                    matrix[x] = new Array(fontSizeX).fill(false);
+                }
+                return matrix;
+            }
+
+            const clone = (src) => {
+                const r = [];
+                for (let i = 0; i < src.length; i++) {
+                    r.push(new Array(src[i].length));
+                    for (let j = 0; j < src[i].length; j++) {
+                        r[i][j] = src[i][j];
+                    }
+                }
+                return r;
+            }
+
+            const setMatrix = (matrix) => {
+                for (let x = 0; x < fontSizeX; x++) {
+                    for (let y = 0; y < fontSizeY; y++) {
+                        select(x, y, matrix[x][y]);
+                    }
+                }
+            }
+
+            const moveIcon = (dir) => {
+                const matrix = displayMatrix;
+                const transformed = createMatrix();
+                const getValue = (x, y) => {
+                    if (x < matrix.length && x > -1) {
+                        if (y < matrix[x].length && y > -1) {
+                            return matrix[x][y];
+                        }
+                    }
+                    return false;
+                };
+
+                for (let x = 0; x < fontSizeX; x++) {
+                    for (let y = 0; y < fontSizeY; y++) {
+                        transformed[x][y] = getValue(x - dir.x, y - dir.y);
+                    }
+                }
+                setMatrix(transformed);
+            };
+
+            const updateUndo = () => {
+                $(".undo").attr("data-length", undoElements.length);
+            }
+
+            const undo = () => {
+                const element = undoElements.pop();
+                element && element.forEach(e => {
+                    select(e.x, e.y, e.value);
+                })
+                updateUndo();
+            }
+
+            $(".undo i").click(undo);
+            $(document).keypress((e) => {
+                if (e.key === "z" && (e.ctrlKey || e.metaKey)) {
+                    undo();
+                }
+            });
+
+            $("button[data-dimension]").click((e) => {
+                const element = $(e.target);
+                if (!element.is(':active')) {
+                    element.parent().find('button').removeClass('active');
+                    element.addClass('active');
+                    const dim = element.attr('data-dimension');
+                    const value = parseInt(element.text().trim());
+                    setCursor(dim, value);
+                    mouseMove(e)
+                }
+            });
+
+            $("#select").click(() => {
+                const code = $("#code").val().trim();
+                const values = code.split("\\").filter(v => v.toString().length > 0);
+                displayIcon(values);
+            })
+
+            $("#clear").click(() => {
+                for (let x = 0; x < fontSizeX; x++) {
+                    for (let y = 0; y < fontSizeY; y++) {
+                        select(x, y, false)
+                    }
+                }
+                calcIcon();
+            })
+
+            $(".move-icon").click((e) => {
+                const dir = $(e.target).attr("data-move").split(',').map(v => parseInt(v));
+                moveIcon({x: dir[0], y: dir[1]});
+            })
+
+            const mouseMove = (e) => {
+                cursor.show();
+
+                const pad = (val) => {
+                    return (Math.floor((val - cellSize / 2) / cellSize) * cellSize);
+                }
+
+                const offset = matrixElement.position();
+                const size = {width: matrixElement.width(), height: matrixElement.height()};
+                const offsetX = offset.left % cellSize;
+                const offsetY = offset.top % cellSize;
+                let top = pad(e.pageY) + offsetY;
+                let left = pad(e.pageX) + offsetX;
+
+                if (top < offset.top) {
+                    top = offset.top;
+                }
+
+                if (left < offset.left) {
+                    left = offset.left;
+                }
+
+                const xSize = cellSize * cursorX;
+                const ySize = cellSize * cursorY;
+                if (top > size.height + offset.top - ySize) {
+                    top = size.height + offset.top - ySize;
+                }
+
+                if (left > size.width + offset.left - xSize) {
+                    left = size.width + offset.left - xSize;
+                }
+
+                cursor.css({top: top, left: left})
+                if (mousePressed) {
+                    toggleElement();
+                }
+            };
+
+            matrixElement.mousemove(mouseMove)
+            cursor.mousemove(mouseMove)
+
+            cursor.click(toggleElement);
+            matrixElement.click(toggleElement);
+
+            let undoStateBefore = null;
+
+            const isMatrixElement = (e) => {
+                const element = $(e);
+                return element.is(cursor) || element.closest("#matrix").length > 0;
+            }
+
+            $(window).mousedown((e) => {
+                if (!isMatrixElement(e.target)) {
+                    return;
+                }
+                mousePressed = true;
+                undoStartIdx = undoElements.length;
+                undoStateBefore = clone(displayMatrix);
+            }).mouseup((e) => {
+                mousePressed = false;
+                if (!isMatrixElement(e.target)) {
+                    return;
+                }
+                if (undoStartIdx !== undoElements.length) {
+                    undoElements.length = undoStartIdx;
+                    const undo = [];
+                    for (let y = 0; y < undoStateBefore.length; y++) {
+                        for (let x = 0; x < undoStateBefore[y].length; x++) {
+                            let stateBefore = undoStateBefore[x][y];
+                            if (stateBefore !== displayMatrix[x][y]) {
+                                undo.push({x, y, value: stateBefore})
+                            }
+                        }
+                    }
+                    undoElements.push(undo);
+                    undoStateBefore = null;
+                }
+                undoStartIdx = null;
+            });
+
+            $(".pencil-options i").click((e) => {
+                drawMode = $(e.target).attr("data-mode");
+                $(".pencil-options i").removeClass("active");
+                $(".pencil-options i[data-mode='" + drawMode + "']").addClass("active");
+                $(".cursor").attr("data-mode", drawMode);
+            });
+
+            $("#save").click(() => {
+                const code = $("#code").val();
+                localStorage.setItem("save-glyph__" + glyphParam.editor + "__" + glyphParam.id, JSON.stringify(code));
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            glyphParam = {
+                glyph: urlParams.get('glyph'),
+                editor: urlParams.get('editor'),
+                x: urlParams.get('x'),
+                y: urlParams.get('y'),
+                id: urlParams.get('id'),
+            }
+
+            const icon = glyphParam.glyph ? glyphParam.glyph : localStorage.getItem('icon');
+
+            if (glyphParam.glyph) {
+                setFontSize(glyphParam.x, glyphParam.y);
+            }
+
+            drawTable();
+
+            const defaultIcon = "\\374\\374\\374\\374\\174\\174\\34\\34\\174\\174\\374\\374\\374\\374\\300\\300\\77\\77\\77\\77\\76\\76\\70\\70\\76\\76\\77\\77\\77\\77\\3\\3";
+
+            $("#code").val(icon ? icon : defaultIcon);
+            $("#select").click();
+
+            if (glyphParam.editor) {
+                $("#save").show();
+            }
+        }
+    )
+</script>
+<nav class="navbar navbar-light bg-light header">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1 fw-bold">u8x8 lib glyph editor</span>
+        <span>
+        see u8x8 display lib: <a target="_blank" href="https://github.com/olikraus/u8g2/wiki/fntlist8x8">https://github.com/olikraus/u8g2/wiki/fntlist8x8</a>
+        </span>
+    </div>
+</nav>
+<div data-mode="draw" class="cursor not-selectable"></div>
+<div class="container">
+    <fieldset class="not-selectable">
+        <legend>Editor</legend>
+        <div class="d-flex flex-row">
+            <div id="matrix"></div>
+            <div class="d-flex flex-column justify-content-between">
+                <div class="glyph-preview">
+                    <canvas id="preview"></canvas>
+                </div>
+                <div class="d-flex flex-column editor-buttons">
+                    <input type="button" class="btn btn-danger btn-sm" value="Clear" id="clear">
+                    <input type="button" style="display: none;" class="btn btn-primary btn-sm" value="Update in font"
+                           id="save">
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <div class="d-flex flex-row move">
+                <div class="d-flex align-items-center">
+                    <i class="fa fa-arrow-circle-left move-icon" data-move="-1,0" aria-hidden="true"></i>
+                </div>
+                <div class="d-flex flex-column justify-content-around">
+                    <i class="fa fa-arrow-circle-up move-icon" data-move="0,-1" aria-hidden="true"></i>
+                    <i class="fa fa-arrow-circle-down move-icon" data-move="0,1" aria-hidden="true"></i>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fa fa-arrow-circle-right move-icon" data-move="1,0" aria-hidden="true"></i>
+                </div>
+            </div>
+            <div class="d-flex align-items-center undo" data-length="0">
+                <i class="fa fa-undo" aria-hidden="true" title="Undo"></i>
+            </div>
+            <div class="cursor-container">
+                <div>
+                    <div class="cursor-buttons" id="cursor-size-x">
+                        <div style="margin-right: 5px">X</div>
+                        <div class="btn-group" role="group">
+                            <button type="button" data-dimension="x" class="btn btn-sm btn-secondary active">1</button>
+                            <button type="button" data-dimension="x" class="btn btn-sm btn-secondary">2</button>
+                            <button type="button" data-dimension="x" class="btn btn-sm btn-secondary">3</button>
+                            <button type="button" data-dimension="x" class="btn btn-sm btn-secondary">4</button>
+                            <button type="button" data-dimension="x" class="btn btn-sm btn-secondary">5</button>
+                            <button type="button" data-dimension="x" class="btn btn-sm btn-secondary">6</button>
+                            <button type="button" data-dimension="x" class="btn btn-sm btn-secondary">7</button>
+                            <button type="button" data-dimension="x" class="btn btn-sm btn-secondary">8</button>
+                        </div>
+                    </div>
+                    <div class="cursor-buttons" id="cursor-size-y">
+                        <div style="margin-right: 5px">Y</div>
+                        <div class="btn-group" role="group">
+                            <button type="button" data-dimension="y" class="btn btn-sm btn-secondary active">1</button>
+                            <button type="button" data-dimension="y" class="btn btn-sm btn-secondary">2</button>
+                            <button type="button" data-dimension="y" class="btn btn-sm btn-secondary">3</button>
+                            <button type="button" data-dimension="y" class="btn btn-sm btn-secondary">4</button>
+                            <button type="button" data-dimension="y" class="btn btn-sm btn-secondary">5</button>
+                            <button type="button" data-dimension="y" class="btn btn-sm btn-secondary">6</button>
+                            <button type="button" data-dimension="y" class="btn btn-sm btn-secondary">7</button>
+                            <button type="button" data-dimension="y" class="btn btn-sm btn-secondary">8</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pencil-options">
+                    <i class="fa fa-pencil active" data-mode="draw" aria-hidden="true" title="Draw"></i>
+                    <i class="fa fa-eraser" data-mode="erase" aria-hidden="true" title="Erase"></i>
+                    <i class="fa fa-random" data-mode="revert" aria-hidden="true" title="Revert"></i>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Glyph data (octal)</legend>
+        <textarea class="form-control" id="code"></textarea>
+        <div style="height: 10px"></div>
+        <input type="button" class="btn btn-danger btn-sm" value="Apply" id="select">
+    </fieldset>
+</div>
+<footer class="bd-footer p-3 p-md-5 mt-5 bg-light text-center text-sm-start">
+    <div class="container">
+        <ul class="bd-footer-links ps-0 mb-3">
+            <li class="d-inline-block"><a target="_blank" href="https://github.com/olikraus/u8g2">GitHub - olikraus
+                u8g2
+                lib</a></li>
+        </ul>
+        <p class="mb-0">u8x8 glyph editor</p>
+        <p class="mb-0">Copyright (c) <a target="_blank" href="https://github.com/andrzejo">andrzejo</a> 2021</p>
+    </div>
+</footer>
+</body>
+</html>
