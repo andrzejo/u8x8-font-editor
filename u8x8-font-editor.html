@@ -240,7 +240,9 @@
         };
 
         const validate = nums => {
-            if (nums.length !== (fontX * 8) + (fontY * 8)) {
+            const pixInTile = 8 * 8;
+            const tilesCount = fontX * fontY;
+            if (nums.length !== (tilesCount * pixInTile) / 8) {
                 alert("Invalid glyph length.");
                 return false;
             }
@@ -403,8 +405,8 @@
         const updateFontSize = (h, v) => {
             $("#font-size-x").val(h);
             $("#font-size-y").val(v);
-            fontX = h;
-            fontY = v;
+            fontX = parseInt(h);
+            fontY = parseInt(v);
             fontSizeXPix = fontX * 8;
             fontSizeYPix = fontY * 8;
         };
