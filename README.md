@@ -8,3 +8,8 @@ See u8x8 github for details: https://github.com/olikraus/u8g2
 DEMO:
 
 https://andrzejo.github.io/
+
+Fixes:
+
+Please read the bug_notes.txt about applied fixes.
+
