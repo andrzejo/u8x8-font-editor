@@ -305,13 +305,11 @@
                 }
 
                 $(".cursor").css({width: cursorX * cellSize, height: cursorY * cellSize});
-            }
+            }            
 
-            const tileCoordinates = (tileIdx) => {
-                const tiles = fontX * fontY;
-                const dim = Math.sqrt(tiles);
-                const x = tileIdx % dim;
-                const y = Math.floor(tileIdx / dim);
+            const tileCoordinates = (tileIdx) => {                
+                const x = tileIdx % fontX;
+                const y = Math.floor(tileIdx / fontX);
                 return {x, y}
             }
 
@@ -443,11 +441,11 @@
                     drawTile(tiles[i], coordinates.x, coordinates.y);
                 }
             }
-
+            
             const createMatrix = () => {
-                const matrix = new Array(fontSizeY).fill(false);
-                for (let x = 0; x < fontSizeY; x++) {
-                    matrix[x] = new Array(fontSizeX).fill(false);
+                const matrix = new Array(fontSizeX).fill(false);
+                for (let x = 0; x < fontSizeX; x++) {
+                    matrix[x] = new Array(fontSizeY).fill(false);
                 }
                 return matrix;
             }
@@ -489,6 +487,7 @@
                     }
                 }
                 setMatrix(transformed);
+                calcIcon();
             };
 
             const updateUndo = () => {

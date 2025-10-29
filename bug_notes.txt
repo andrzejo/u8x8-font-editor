@@ -1,0 +1,36 @@
+****************
+This are the steps to reproduce the found "u8x8-glyph-editor.html" bugs.
+****************
+
+****************
+Use the original sources from "https://github.com/andrzejo/u8x8-font-editor"
+and open the font editor.
+
+****************
+Import the following 1x2 example font.
+
+/* header     */ "\100\102\1\2"
+/* turn right */ "\0\6\14\30\360\300\0\0\0\170\160\170\117\3\0\0"
+/* turn left  */ "\0\36\16\36\372\300\0\0\0\140\60\30\17\3\0\0"
+
+****************
+Open a glyph in glyph editor.
+The glyph is not displayed right and the "Update in font" button is missing.
+
+****************
+Another bug comes when you deal with bigger unsymmetric fonts e.G. 7x4. In that case the pixel edit matrix is not shown.
+
+****************
+And third. When you move (left, right, up, down) the glyph content the glyph data line and feedback not updated.
+
+****************
+I applied some small fixes to solve the shown issues above.
+Now, on my side, all works as expected and I created some nice icons fonts in different sizes with it.
+
+****************
+A. Gommlich
+09.10.2025
+
+https://github.com/GoKiDevel/u8x8-font-editor
+****************
+

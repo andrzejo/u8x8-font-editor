@@ -215,7 +215,7 @@
                     const tile = Math.floor(i / 8);
 
                     const tx = tile % fontX;
-                    const ty = Math.floor(tile / fontY);
+                    const ty = Math.floor(tile / fontX);
                     const x = (tx * 8) + (i % 8);
 
                     for (let b = 0; b < byte.length; b++) {
