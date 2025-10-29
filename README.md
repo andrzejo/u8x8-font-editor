@@ -9,7 +9,4 @@ DEMO:
 
 https://andrzejo.github.io/
 
-Fixes:
-
-Please read the bug_notes.txt about applied fixes.
 
