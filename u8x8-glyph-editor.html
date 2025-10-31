@@ -305,9 +305,9 @@
                 }
 
                 $(".cursor").css({width: cursorX * cellSize, height: cursorY * cellSize});
-            }            
+            }
 
-            const tileCoordinates = (tileIdx) => {                
+            const tileCoordinates = (tileIdx) => {
                 const x = tileIdx % fontX;
                 const y = Math.floor(tileIdx / fontX);
                 return {x, y}
@@ -441,7 +441,7 @@
                     drawTile(tiles[i], coordinates.x, coordinates.y);
                 }
             }
-            
+
             const createMatrix = () => {
                 const matrix = new Array(fontSizeX).fill(false);
                 for (let x = 0; x < fontSizeX; x++) {
@@ -758,7 +758,7 @@
                 lib</a></li>
         </ul>
         <p class="mb-0">u8x8 glyph editor</p>
-        <p class="mb-0">Copyright (c) <a target="_blank" href="https://github.com/andrzejo">andrzejo</a> 2021</p>
+        <p class="mb-0">Copyright (c) <a target="_blank" href="https://github.com/andrzejo">andrzejo</a> 2025</p>
     </div>
 </footer>
 </body>

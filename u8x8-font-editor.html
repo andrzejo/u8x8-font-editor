@@ -180,6 +180,13 @@
     .move-holder {
         cursor: move;
     }
+
+    .font-size-tip {
+        font-size: xx-small;
+        color: gray;
+        max-width: 400px;
+        display: block;
+    }
 </style>
 <body>
 <script>
@@ -242,8 +249,9 @@
         const validate = nums => {
             const pixInTile = 8 * 8;
             const tilesCount = fontX * fontY;
-            if (nums.length !== (tilesCount * pixInTile) / 8) {
-                alert("Invalid glyph length.");
+            const expectedBytes = (tilesCount * pixInTile) / 8;
+            if (nums.length !== expectedBytes) {
+                alert(`Invalid glyph length. Expected ${expectedBytes} bytes [(${fontX} × ${fontY}) tiles × 8 pixels per tile], but found ${nums.length}.`);
                 return false;
             }
             return true;
@@ -285,6 +293,38 @@
                 $(e).find('.glyph-index').text(index);
             });
         };
+
+        const genEmptyFont = () => {
+            let glyph = "\\340\\200\\206\\200\\200\\206\\200\\340";
+            const bytes = (fontX * fontY * 8) - 8;
+            const val = 0;
+            for (let i = 0; i < bytes; i++) {
+                glyph += "\\" + val.toString(8);
+            }
+            $("#new-glyph").val(glyph);
+        };
+
+        const changeFontSize = () => {
+            const x = $("#font-size-x").val();
+            const y = $("#font-size-y").val();
+            updateFontSize(x, y);
+            updateCode();
+            genEmptyFont();
+        }
+
+        const updateFontSizeControls = () => {
+            const elements = $('.glyph-item:visible');
+            const ro = (e, val) => {
+                if (val) {
+                    $(e).attr('readonly', 'readonly');
+                } else {
+                    $(e).removeAttr('readonly');
+                }
+            }
+            const lockSize = elements.length > 0;
+            ro($("#font-size-x"), lockSize);
+            ro($("#font-size-y"), lockSize);
+        }
 
         const updateCode = () => {
             const headerStr = "header";
@@ -332,6 +372,7 @@
             localStorage.setItem("font", JSON.stringify(settings));
             hljs.highlightAll();
             recalcIndex();
+            updateFontSizeControls();
         }
 
         function onChange() {
@@ -402,9 +443,13 @@
             return comments;
         };
 
-        const updateFontSize = (h, v) => {
+        const setFontSize = (h, v) => {
             $("#font-size-x").val(h);
             $("#font-size-y").val(v);
+            updateFontSize(h, v);
+        };
+
+        const updateFontSize = (h, v) => {
             fontX = parseInt(h);
             fontY = parseInt(v);
             fontSizeXPix = fontX * 8;
@@ -451,7 +496,7 @@
             const v = parsed[3];
             $("#glyph-list").html('');
             $("#font-name").val("imported_font");
-            updateFontSize(h, v);
+            setFontSize(h, v);
 
             const glyphs = last - first;
             for (let g = 0; g <= glyphs; g++) {
@@ -499,6 +544,18 @@
             },
         });
 
+        $("#reset").click(() => {
+            if (confirm("Are you sure you want to discard all changes?")) {
+                localStorage.clear();
+                window.location = window.location;
+            }
+            updateFontSizeControls();
+        });
+
+        $("#font-size-x,#font-size-y")
+            .focus(updateFontSizeControls)
+            .change(changeFontSize);
+
         $("#font-name").change(updateCode);
 
         window.onstorage = (e) => {
@@ -520,9 +577,13 @@
         if (settings) {
             const s = JSON.parse(settings);
             $("#font-name").val(s.name);
-            updateFontSize(s.x, s.y);
+            setFontSize(s.x, s.y);
             s.glyphs.forEach(g => {
-                addGlyph(parse(g.code), g.name, g.uuid);
+                try {
+                    addGlyph(parse(g.code), g.name, g.uuid);
+                } catch (e) {
+                    console.error(e);
+                }
             });
         }
         updateCode();
@@ -547,12 +608,18 @@
             </div>
             <div class="field">
                 <label>Font size:</label>
-                <!--  todo: handle change font size -->
                 <div class="d-flex flex-row">
-                    <input class="form-control short" id="font-size-x" value="2" type="text" readonly>
+                    <input aria-label="X" class="form-control short" id="font-size-x" value="2" type="number" min="1"
+                           max="100" readonly>
                     <div style="width: 10px"></div>
-                    <input class="form-control short" id="font-size-y" value="2" type="text" readonly>
+                    <input aria-label="Y" class="form-control short" id="font-size-y" value="2" type="number" min="1"
+                           max="100" readonly>
                 </div>
+                <span class="font-size-tip">The font size can only be changed if it doesn’t contain any glyphs yet.
+                        Reset your changes to set a different size.</span>
+            </div>
+            <div class="field ms-auto d-flex align-items-center">
+                <input type="button" class="btn btn-danger btn-sm ms-auto" id="reset" value="Reset ALL">
             </div>
         </div>
     </fieldset>
@@ -639,7 +706,7 @@
                 lib</a></li>
         </ul>
         <p class="mb-0">u8x8 font editor</p>
-        <p class="mb-0">Copyright (c) <a target="_blank" href="https://github.com/andrzejo">andrzejo</a> 2021</p>
+        <p class="mb-0">Copyright (c) <a target="_blank" href="https://github.com/andrzejo">andrzejo</a> 2025</p>
     </div>
 </footer>
 </body>
